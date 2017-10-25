@@ -15,69 +15,60 @@
 
 package net.surina.soundtouch;
 
-public final class SoundTouch
-{
+public final class SoundTouch {
     // Native interface function that returns SoundTouch version string.
     // This invokes the native c++ routine defined in "soundtouch-jni.cpp".
     public native final static String getVersionString();
-    
+
     private native final void setTempo(long handle, float tempo);
 
     private native final void setPitchSemiTones(long handle, float pitch);
-    
+
     private native final void setSpeed(long handle, float speed);
 
     private native final int processFile(long handle, String inputFile, String outputFile);
 
+    private native final int processBuffer(long handle, byte[] audioData, int offset, int dataLen, int sampleRate, int channel);
+
     public native final static String getErrorString();
 
     private native final static long newInstance();
-    
+
     private native final void deleteInstance(long handle);
-    
+
     long handle = 0;
-    
-    
-    public SoundTouch()
-    {
-    	handle = newInstance();    	
-    }
-    
-    
-    public void close()
-    {
-    	deleteInstance(handle);
-    	handle = 0;
+
+    public SoundTouch() {
+        handle = newInstance();
     }
 
-
-    public void setTempo(float tempo)
-    {
-    	setTempo(handle, tempo);
+    public void close() {
+        deleteInstance(handle);
+        handle = 0;
     }
 
-
-    public void setPitchSemiTones(float pitch)
-    {
-    	setPitchSemiTones(handle, pitch);
+    public void setTempo(float tempo) {
+        setTempo(handle, tempo);
     }
 
-    
-    public void setSpeed(float speed)
-    {
-    	setSpeed(handle, speed);
+    public void setPitchSemiTones(float pitch) {
+        setPitchSemiTones(handle, pitch);
     }
 
-
-    public int processFile(String inputFile, String outputFile)
-    {
-    	return processFile(handle, inputFile, outputFile);
+    public void setSpeed(float speed) {
+        setSpeed(handle, speed);
     }
 
-    
+    public int processFile(String inputFile, String outputFile) {
+        return processFile(handle, inputFile, outputFile);
+    }
+
+    public int processBuffer(byte[] io, int offset, int dataLen, int sampleRate, int channel) {
+        return processBuffer(handle, io, offset, dataLen, sampleRate, channel);
+    }
+
     // Load the native library upon startup
-    static
-    {
+    static {
         System.loadLibrary("soundtouch");
     }
 }

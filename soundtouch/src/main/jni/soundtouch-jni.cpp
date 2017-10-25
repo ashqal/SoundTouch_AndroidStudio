@@ -259,3 +259,53 @@ extern "C" DLL_PUBLIC int Java_net_surina_soundtouch_SoundTouch_processFile(JNIE
 
 	return 0;
 }
+
+// Processes the sound file
+static void _process(SoundTouch *pSoundTouch, uint8_t* data, int offset, int data_len, int sample_rate, int channels)
+{
+    pSoundTouch->setSampleRate(sample_rate);
+    pSoundTouch->setChannels(channels);
+    // LOGV("JNI _process sizeof SAMPLETYPE %d", sizeof(SAMPLETYPE));
+
+    int samples = data_len / channels / sizeof(SAMPLETYPE);
+
+    pSoundTouch->putSamples((SAMPLETYPE*)data + offset, samples);
+
+    int total = 0;
+    int sample = 0;
+    do
+    {
+        sample = pSoundTouch->receiveSamples((SAMPLETYPE*)data + total + offset, samples - total);
+        total += sample;
+    } while (sample != 0);
+
+}
+
+extern "C" DLL_PUBLIC int Java_net_surina_soundtouch_SoundTouch_processBuffer(JNIEnv *env, jobject thiz, jlong handle, jbyteArray data, jint offset, jint dataLen, jint sampleRate, jint channel)
+{
+
+    SoundTouch *ptr = (SoundTouch*)handle;
+    uint8_t *audioData = (uint8_t *) env->GetByteArrayElements(data, 0);
+
+    /// gomp_tls storage bug workaround - see comments in _init_threading() function!
+    if (_init_threading(true)) return -1;
+
+    try
+    {
+        _process(ptr, audioData, offset, dataLen, sampleRate, channel);
+    }
+    catch (const runtime_error &e)
+    {
+        const char *err = e.what();
+        // An exception occurred during processing, return the error message
+        LOGV("JNI exception in SoundTouch::processBuffer: %s", err);
+        _setErrmsg(err);
+        env->ReleaseByteArrayElements(data, (jbyte*)audioData, JNI_ABORT);
+        return -1;
+    }
+
+    env->ReleaseByteArrayElements(data, (jbyte*)audioData, JNI_ABORT);
+
+    return 0;
+}
+
