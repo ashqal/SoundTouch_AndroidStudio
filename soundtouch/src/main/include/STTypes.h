@@ -49,6 +49,7 @@ typedef unsigned long   ulong;
     typedef ulong ulongptr;
 #endif
 
+#define NRTC_INTEGER_SAMPLES 1
 
 // Helper macro for aligning pointer up to next 16-byte boundary
 #define SOUNDTOUCH_ALIGN_POINTER_16(x)      ( ( (ulongptr)(x) + 15 ) & ~(ulongptr)15 )
@@ -75,7 +76,7 @@ namespace soundtouch
     /// runtime performance so recommendation is to keep this off.
     // #define USE_MULTICH_ALWAYS
 
-    #if (defined(__SOFTFP__) && defined(ANDROID))
+    #if ((defined(__SOFTFP__) || defined(NRTC_INTEGER_SAMPLES)) && defined(ANDROID))
         // For Android compilation: Force use of Integer samples in case that
         // compilation uses soft-floating point emulation - soft-fp is way too slow
         #undef  SOUNDTOUCH_FLOAT_SAMPLES
@@ -103,7 +104,7 @@ namespace soundtouch
      
     #endif
 
-    #if (_M_IX86 || __i386__ || __x86_64__ || _M_X64)
+    #if ((_M_IX86 || __i386__ || __x86_64__ || _M_X64) && !NRTC_INTEGER_SAMPLES)
         /// Define this to allow X86-specific assembler/intrinsic optimizations. 
         /// Notice that library contains also usual C++ versions of each of these
         /// these routines, so if you're having difficulties getting the optimized 
