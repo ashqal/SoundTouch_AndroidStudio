@@ -70,6 +70,14 @@ public class ExampleActivity extends Activity implements OnClickListener
 
 		// Check soundtouch library presence & version
 		checkLibVersion();
+
+		findViewById(R.id.record).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(ExampleActivity.this, RecordActivity.class);
+				v.getContext().startActivity(i);
+			}
+		});
 	}
 	
 	

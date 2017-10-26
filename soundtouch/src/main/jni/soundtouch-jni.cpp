@@ -261,38 +261,39 @@ extern "C" DLL_PUBLIC int Java_net_surina_soundtouch_SoundTouch_processFile(JNIE
 }
 
 // Processes the sound file
-static void _process(SoundTouch *pSoundTouch, uint8_t* data, int offset, int data_len, int sample_rate, int channels)
+static void _process(SoundTouch *pSoundTouch, uint8_t* data, int dataLen, int samplePerBtye, int sampleRate, int channels)
 {
-    pSoundTouch->setSampleRate(sample_rate);
+    pSoundTouch->setSampleRate(sampleRate);
     pSoundTouch->setChannels(channels);
     // LOGV("JNI _process sizeof SAMPLETYPE %d", sizeof(SAMPLETYPE));
+    assert(sizeof(SAMPLETYPE) == samplePerByte);
 
-    int samples = data_len / channels / sizeof(SAMPLETYPE);
+    int samples = dataLen / channels / samplePerBtye;
 
-    pSoundTouch->putSamples((SAMPLETYPE*)data + offset, samples);
+    pSoundTouch->putSamples((SAMPLETYPE*)data, samples);
 
     int total = 0;
     int sample = 0;
     do
     {
-        sample = pSoundTouch->receiveSamples((SAMPLETYPE*)data + total + offset, samples - total);
+        sample = pSoundTouch->receiveSamples((SAMPLETYPE*)data + total, samples - total);
         total += sample;
     } while (sample != 0);
 
 }
 
-extern "C" DLL_PUBLIC int Java_net_surina_soundtouch_SoundTouch_processBuffer(JNIEnv *env, jobject thiz, jlong handle, jbyteArray data, jint offset, jint dataLen, jint sampleRate, jint channel)
+extern "C" DLL_PUBLIC int Java_net_surina_soundtouch_SoundTouch_processBuffer(JNIEnv *env, jobject thiz, jlong handle, jobject data, jint dataLen, jint samplePerByte, jint sampleRate, jint channel)
 {
 
     SoundTouch *ptr = (SoundTouch*)handle;
-    uint8_t *audioData = (uint8_t *) env->GetByteArrayElements(data, 0);
+    uint8_t *audioData = (uint8_t *) env->GetDirectBufferAddress(data);
 
     /// gomp_tls storage bug workaround - see comments in _init_threading() function!
     if (_init_threading(true)) return -1;
 
     try
     {
-        _process(ptr, audioData, offset, dataLen, sampleRate, channel);
+        _process(ptr, audioData, dataLen, samplePerByte, sampleRate, channel);
     }
     catch (const runtime_error &e)
     {
@@ -300,12 +301,8 @@ extern "C" DLL_PUBLIC int Java_net_surina_soundtouch_SoundTouch_processBuffer(JN
         // An exception occurred during processing, return the error message
         LOGV("JNI exception in SoundTouch::processBuffer: %s", err);
         _setErrmsg(err);
-        env->ReleaseByteArrayElements(data, (jbyte*)audioData, JNI_ABORT);
         return -1;
     }
 
-    env->ReleaseByteArrayElements(data, (jbyte*)audioData, JNI_ABORT);
-
     return 0;
 }
-

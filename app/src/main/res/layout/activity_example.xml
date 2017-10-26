@@ -123,6 +123,12 @@
         android:text="Status console:"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
+    <Button
+        android:id="@+id/record"
+        android:text="record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="match_parent"

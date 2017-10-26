@@ -15,6 +15,8 @@
 
 package net.surina.soundtouch;
 
+import java.nio.ByteBuffer;
+
 public final class SoundTouch {
     // Native interface function that returns SoundTouch version string.
     // This invokes the native c++ routine defined in "soundtouch-jni.cpp".
@@ -28,7 +30,7 @@ public final class SoundTouch {
 
     private native final int processFile(long handle, String inputFile, String outputFile);
 
-    private native final int processBuffer(long handle, byte[] audioData, int offset, int dataLen, int sampleRate, int channel);
+    private native final int processBuffer(long handle, Object audioData, int dataLen, int samplePerByte, int sampleRate, int channel);
 
     public native final static String getErrorString();
 
@@ -63,8 +65,8 @@ public final class SoundTouch {
         return processFile(handle, inputFile, outputFile);
     }
 
-    public int processBuffer(byte[] io, int offset, int dataLen, int sampleRate, int channel) {
-        return processBuffer(handle, io, offset, dataLen, sampleRate, channel);
+    public int processBuffer(ByteBuffer io, int dataLen, int samplePerByte, int sampleRate, int channel) {
+        return processBuffer(handle, io, dataLen, samplePerByte, sampleRate, channel);
     }
 
     // Load the native library upon startup
